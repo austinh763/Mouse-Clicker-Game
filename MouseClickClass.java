@@ -1,3 +1,5 @@
+package finalProject;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -7,19 +9,20 @@ import java.util.Random;
 
 public class MouseClickClass extends JFrame implements ActionListener
 {
-    private final String NOT_MOUSE_CHAR = " ";
-    private final String MOUSE_CHAR = "X";
+    private final String rightClick = "X";
 
     private final int MAX_ROUNDS = 5;
-    private int NUM_boardButtons = 64;
+    private int numBoardButtons = 64;
 
     private int clicked = 0;
     private int misses = 0;
     private int round = 0;
     private int delay = 1500;
+    private String wrongClick = " ";
+
 
     private JPanel panel = new JPanel();
-    private JButton[] boardButtons = new JButton[NUM_boardButtons];
+    private JButton[] boardButtons = new JButton[numBoardButtons];
     private JLabel instructions;
     private Timer timer;
     private JPanel buttonsPanel = new JPanel();
@@ -28,6 +31,7 @@ public class MouseClickClass extends JFrame implements ActionListener
     private JButton quit = new JButton("Quit");
     private JButton reset = new JButton("Reset");
     private JButton pause = new JButton("Pause");
+    private JButton resume = new JButton("Resume");
     
     int percentage = 0;
     boolean caught = false;
@@ -40,6 +44,11 @@ public class MouseClickClass extends JFrame implements ActionListener
     JMenuItem easy = new JMenuItem("Easy");
     JMenuItem medium = new JMenuItem("Medium");
     JMenuItem hard = new JMenuItem("Hard");
+    JMenu changeButtons = new JMenu("Change Buttons");
+    JMenuItem noButton = new JMenuItem("No button");
+    JMenuItem button1 = new JMenuItem("0");
+    JMenuItem button2 = new JMenuItem("8");
+
 
     /**
      * Constructor.
@@ -47,8 +56,8 @@ public class MouseClickClass extends JFrame implements ActionListener
     public MouseClickClass()
     {
         // Setup the JFrame...
-        super("Catch The Mouse!");
-        setSize(500, 500);
+        super("Mouse Clicker");
+        setSize(1280, 720);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
@@ -59,15 +68,15 @@ public class MouseClickClass extends JFrame implements ActionListener
         
 
         // Padding around edges.
-        game.setLayout(new GridLayout(8, 6));
+        game.setLayout(new GridLayout(8, 8));
         panel.setLayout(new BorderLayout());
         panel.setBorder(new EmptyBorder(15, 15, 15, 15));
         setJMenuBar(bar);
 
         // Create each button.
-        for (int i = 0; i < NUM_boardButtons; ++i)
+        for (int i = 0; i < numBoardButtons; ++i)
         {
-            boardButtons[i] = new JButton(NOT_MOUSE_CHAR);
+            boardButtons[i] = new JButton(wrongClick);
             boardButtons[i].setFont(myFont);
             boardButtons[i].addActionListener(this);
             boardButtons[i].setOpaque(true);
@@ -87,9 +96,14 @@ public class MouseClickClass extends JFrame implements ActionListener
         quit.addActionListener(this);
         reset.addActionListener(this);
         pause.addActionListener(this);
+        resume.addActionListener(this);
         easy.addActionListener(this);
         medium.addActionListener(this);
         hard.addActionListener(this);
+        noButton.addActionListener(this);
+        button1.addActionListener(this);
+        button2.addActionListener(this);
+
 
         // Add elements.
         panel.add(instructions, BorderLayout.NORTH);
@@ -98,14 +112,20 @@ public class MouseClickClass extends JFrame implements ActionListener
         buttonsPanel.add(quit);
         buttonsPanel.add(reset);
         buttonsPanel.add(pause);
+        buttonsPanel.add(resume);
         add(panel);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
         bar.add(difficulty);
+        bar.add(changeButtons);
         difficulty.add(easy);
         difficulty.add(medium);
         difficulty.add(hard);
+        changeButtons.add(noButton);
+        changeButtons.add(button1);
+        changeButtons.add(button2);
         //moveMouse();
         updateInstructions();     
+        resume.setVisible(false);
     }
 
     /**
@@ -114,7 +134,7 @@ public class MouseClickClass extends JFrame implements ActionListener
     public int getRandomPlacement()
     {
         Random random = new Random();
-        return random.nextInt(NUM_boardButtons);
+        return random.nextInt(numBoardButtons);
     }
         	
     /**
@@ -124,12 +144,12 @@ public class MouseClickClass extends JFrame implements ActionListener
     {    	
         timer.restart();
         int index = getRandomPlacement();
-        for (int i = 0; i < NUM_boardButtons; ++i)
+        for (int i = 0; i < numBoardButtons; ++i)
         {
-            boardButtons[i].setText(NOT_MOUSE_CHAR);
+            boardButtons[i].setText(wrongClick);
             if (i == index)
             {
-                boardButtons[i].setText(MOUSE_CHAR);
+                boardButtons[i].setText(rightClick);
                 boardButtons[i].setBackground(Color.WHITE);
                 boardButtons[i].setForeground(Color.BLACK);
             }
@@ -154,10 +174,9 @@ public class MouseClickClass extends JFrame implements ActionListener
     private void updateInstructions()
     {
         String roundStr = "<html>Click the ''X''<br/>Round: " + round + " of " + MAX_ROUNDS + "<br/>Misses:<html/> " 
-        		+ misses + "<br>Delay: " + delay;
+        		+ misses + "<br>Delay: " + delay + "ms";
         instructions.setText(roundStr);
         if(round >= MAX_ROUNDS-1) {
-        	timer.stop();
         	gameOver = true;
         }
     }
@@ -184,13 +203,18 @@ public class MouseClickClass extends JFrame implements ActionListener
         else if(source == reset) {
         	resetGame();
         	updateInstructions();
+        	timer.stop();
         }
         else if(source == quit) {
         	super.dispose();
         }
         else if(source == pause) {
         	timer.stop();
-        	pause.setText("Resume");        	        	
+        	resume.setVisible(true);     	        	
+        }
+        else if(source == resume) {
+        	timer.start();
+        	resume.setVisible(false);
         }
         else if(source == easy) {
         	timer.setInitialDelay(1500);
@@ -207,6 +231,16 @@ public class MouseClickClass extends JFrame implements ActionListener
         	delay = 700;
 
         }
+        else if(source == noButton) {
+        	wrongClick = " ";
+        }
+        else if(source == button1) {
+        	wrongClick = "0";
+        }
+        else if(source == button2) {
+        	wrongClick = "8";
+        }
+
         // A button was clicked...
         else 
         {
@@ -217,11 +251,11 @@ public class MouseClickClass extends JFrame implements ActionListener
             boolean notCaught = false;
 			
             // ...the user clicked on the mouse!
-            if (button.getText().equals(MOUSE_CHAR))
+            if (button.getText().equals(rightClick))
             {
                 ++clicked;
                 round++;
-                for (int i = 0; i < NUM_boardButtons; ++i)
+                for (int i = 0; i < numBoardButtons; ++i)
                 {
                     boardButtons[i].setBackground(Color.WHITE);
                     boardButtons[i].setForeground(Color.BLACK);
@@ -231,7 +265,7 @@ public class MouseClickClass extends JFrame implements ActionListener
             }
 
             // ...the user clicked on something else. Add a miss to their score.
-            else if(button.getText().equals(NOT_MOUSE_CHAR))
+            else if(button.getText().equals(wrongClick))
             {	
             	round++;
             	++misses; 
@@ -239,7 +273,7 @@ public class MouseClickClass extends JFrame implements ActionListener
             }            
             // The game is finished. Display the score to the user and reset the game.
         	if (gameOver == true)
-            {
+            {	timer.stop();
                 percentage = (int) Math.round(clicked / (double) (misses + clicked) * 100);
                 JOptionPane.showMessageDialog(null, "Finished! \nYou caught the mouse " + percentage + "% of the time!\nMisses: " + misses + "\n");
             }
@@ -249,8 +283,8 @@ public class MouseClickClass extends JFrame implements ActionListener
             
             else if (caught == true)
             {            	
-                button.setBackground(Color.GREEN);
-                button.setForeground(Color.WHITE);
+                //button.setBackground(Color.GREEN);
+                //button.setForeground(Color.WHITE);
                 updateInstructions();
                 moveMouse();
             }
@@ -264,4 +298,3 @@ public class MouseClickClass extends JFrame implements ActionListener
         }
     }
 }
-
